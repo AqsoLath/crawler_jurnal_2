@@ -1,0 +1,18 @@
+{
+  "name": "crawler_jurnal",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "download-pdf": "^0.1.6",
+    "mysql": "^2.18.1",
+    "nodejs-file-downloader": "^4.9.3",
+    "puppeteer": "^14.1.1"
+  }
+}
