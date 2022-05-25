@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.1143.0",
+    "dotenv": "^16.0.1",
     "download-pdf": "^0.1.6",
     "mysql": "^2.18.1",
     "nodejs-file-downloader": "^4.9.3",

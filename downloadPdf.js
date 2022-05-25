@@ -3,8 +3,16 @@ const puppeteer = require("puppeteer")
 const mysql = require("mysql")
 const path = require('path');
 const fs = require("fs");
+const dotenv = require("dotenv");
+const AWS = require("aws-sdk");
 
+// ambil data dari yang sudah kita buat di file .env
+dotenv.config();
 const downloadPath = path.resolve(__dirname + './data');
+const spacesEndpoint = process.env.DO_SPACES_ENDPOINT;
+
+// Buat sambungan dengan s3 bucket punya heylaw, dengan data yang dari .env.
+const s3 = new AWS.S3({endpoint: spacesEndpoint, accessKeyId: process.env.DO_SPACES_KEY, secretAccessKey: process.env.DO_SPACES_SECRET});
 
 // buat fungsi asynchronous untuk puppeteer
 async function getDataJurnal(){
@@ -144,6 +152,7 @@ async function getDataJurnal(){
 	  // files di sini merupakan array nama file di folder data yang sudah diurutkan berdasarkan waktu download
 
 	  // Kita ubah nama file nya yang awalnya default dari chrome nya menjadi apa yang sudah kita buat di arr_nama_file
+
 	  for(let i = 0; i < files.length; i++){
 		let pathLama = `data/${files[i]}`;
 		let pathBaru = `data/${arr_nama_file[i]}`;
@@ -152,13 +161,21 @@ async function getDataJurnal(){
 
 			console.log(`Berhasil mengganti nama ${pathLama} menjadi ${pathBaru}`)
 
+			// Setelah kita ganti namanya lalu kita upload ke s3. 
+			const fileToUpload = pathBaru;
+
+			// Bucketnya berasal dari file .env yang kita buat, Key nya adalah folder di mana kita mau nyimpannya di S3 diikuti dengan nama file kita mau nyimpannya, Body nya adalah file yang ingin kita upload, ACL nya gak tau apaan, intinya itu dah.
+			s3.putObject({Bucket: process.env.DO_SPACES_NAME, Key: "latihan/" + fileToUpload, Body: fileToUpload, ACL: "public-read"}, (err, data) => {
+				if (err) return console.log(err);
+				console.log("Your file has been uploaded successfully!", data);
+			});
 		} )
 
 	}
-	});  
 
 	
-
+	});  
+ 
 	await browser.close()	
 }
 
