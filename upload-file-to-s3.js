@@ -3,6 +3,11 @@
 const dotenv = require("dotenv");
 const AWS = require("aws-sdk");
 const fs = require("fs")
+// var PDFDocument = require('pdfkit');
+
+// doc = new PDFDocument();
+
+// doc.pipe(fs.createWriteStream('Dewi Nawang Wulan - Ratio Legis Kewenangan Diskresioner Kementerian Kesehatan Terkait Regulasi Komersialisasi Vaksin.pdf'));
 
 dotenv.config()
 
@@ -16,7 +21,7 @@ console.log(file_di_folder_data)
 
 for(let i = 0; i < file_di_folder_data.length; i++){
 	fs.readFile("data/" + file_di_folder_data[i], (err,data) => {
-	s3.putObject({Bucket: process.env.DO_SPACES_NAME, Key: "latihan/" + file_di_folder_data[i], Body: data, ACL: "public-read"}, (err, data) => {
+	s3.upload({Bucket: process.env.DO_SPACES_NAME, Key: "latihan/" + file_di_folder_data[i], Body: data, ACL: "public-read", ContentType: 'application/pdf'}, (err, data) => {
 		if (err) return console.log(err);
 		console.log("Your file has been uploaded successfully!", data);
 	});

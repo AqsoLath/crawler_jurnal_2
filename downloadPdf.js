@@ -71,24 +71,24 @@ async function getDataJurnal(){
 		const data = {title, author, nama_jurnal, universitas, doi, abstrak, nama_file, tahun};
 
 		// Masukkan data ke database
-		let con = mysql.createConnection({
-		  host: "localhost",
-		  user: "root",
-		  password: "",
-		  database: "tugas mas nandi"
-		});
+		// let con = mysql.createConnection({
+		//   host: "localhost",
+		//   user: "root",
+		//   password: "",
+		//   database: "tugas mas nandi"
+		// });
 
-		con.connect(function(err) {
-		  if (err) throw err;
+		// con.connect(function(err) {
+		//   if (err) throw err;
 
-		  let sql = `INSERT INTO crawler_jurnal (title, author, nama_jurnal, universitas, doi, abstrak, nama_file, tahun) VALUES ("${data.title}", "${data.author}", "${data.nama_jurnal}", "${data.universitas}", "${data.doi}", "${data.abstrak}", "${data.nama_file}", "${data.tahun}") `;
+		//   let sql = `INSERT INTO crawler_jurnal (title, author, nama_jurnal, universitas, doi, abstrak, nama_file, tahun) VALUES ("${data.title}", "${data.author}", "${data.nama_jurnal}", "${data.universitas}", "${data.doi}", "${data.abstrak}", "${data.nama_file}", "${data.tahun}") `;
 
-		  con.query(sql, function(err, result){
-		    if(err) throw err;
+		//   con.query(sql, function(err, result){
+		//     if(err) throw err;
 
-		    console.log(`berhasil menambahkan ${i+1} row`)
-		  })
-		});
+		//     console.log(`berhasil menambahkan ${i+1} row`)
+		//   })
+		// });
 
 		await page._client.send('Page.setDownloadBehavior', {
             behavior: 'allow',
@@ -161,13 +161,16 @@ async function getDataJurnal(){
 
 			console.log(`Berhasil mengganti nama ${pathLama} menjadi ${pathBaru}`)
 
-			// Setelah kita ganti namanya lalu kita upload ke s3. 
-			const fileToUpload = pathBaru;
+			// Setelah itu kita siapkan file yang mau diupload dengan mengganti namanya. yaitu kita ilangin "data/" dari path nya.
+			const fileToUpload = pathBaru.split("/").pop();
 
-			// Bucketnya berasal dari file .env yang kita buat, Key nya adalah folder di mana kita mau nyimpannya di S3 diikuti dengan nama file kita mau nyimpannya, Body nya adalah file yang ingin kita upload, ACL nya gak tau apaan, intinya itu dah.
-			s3.putObject({Bucket: process.env.DO_SPACES_NAME, Key: "latihan/" + fileToUpload, Body: fileToUpload, ACL: "public-read"}, (err, data) => {
-				if (err) return console.log(err);
-				console.log("Your file has been uploaded successfully!", data);
+			// Kita baca file nya pake readFile yang file yang ada di dalam folder data
+			fs.readFile("data/" + fileToUpload, (err,data) => {
+				// Kemudian kita upload ke S3, Bucketnya berasal dari file .env yang kita buat, Key nya adalah folder di mana kita mau nyimpannya di S3 diikuti dengan nama file kita mau nyimpannya, Body nya adalah file yang ingin kita upload, ACL nya gak tau apaan intinya itu dah, ContentType nya adalah 'application/pdf'
+				s3.upload({Bucket: process.env.DO_SPACES_NAME, Key: "latihan/" + fileToUpload, Body: data, ACL: "public-read", ContentType: 'application/pdf'}, (err, data) => {
+					if (err) return console.log(err);
+					console.log("Your file has been uploaded successfully!", data);
+				});
 			});
 		} )
 
