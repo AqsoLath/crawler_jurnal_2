@@ -29,6 +29,8 @@ async function getDataJurnal(){
 
 	const nama_jurnal = "Jurnal Esensi Hukum"//await page.$eval(".data strong", text => text.innerText)
 
+	const universitas = "Universitas Pembangunan Nasional Veteran Jakarta"
+
 	for(let i = 0; i < linkIssue.length; i++){
 		await page.goto(linkIssue[i], {timeout: 0})
 
@@ -48,17 +50,10 @@ async function getDataJurnal(){
 
 
 			// Buat try catch buat nampung jika data tidak ada, maka akan diisi "-"
-			let universitas;
-			try {
-				universitas = await page.$eval(".affiliation", text => text.innerText)
-			} catch {
-				universitas = "-"
-			}
-
 			let abstrak;
 			try {
 				abstrak = await page.$$eval(".abstract p", (abstrak) => {
-					return abstrak.map(text => text.innerText). join("\n")
+					return abstrak.map(text => text.innerText).join("\n")
 				})
 			} catch {
 				abstrak = "-"

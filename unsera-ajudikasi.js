@@ -18,23 +18,25 @@ async function getDataJurnal(){
 
 	const page = await browser.newPage();
 
-	await page.goto("https://perspektif-hukum.hangtuah.ac.id/index.php/jurnal/issue/archive", {timeout: 0})
+	await page.goto("https://e-jurnal.lppmunsera.org/index.php/ajudikasi/issue/archive", {timeout: 0})
 
 	const linkIssue = await page.$$eval("a.title", (link) => {
 		return link.map(x => x.href)
 	})
 
 
-	let arr_nama_file = []
+	let arr_nama_file = [];
 
-	const nama_jurnal = "Perspektif Hukum"//await page.$eval(".data strong", text => text.innerText)
+	let linkToDownload = [];
 
-	const universitas = "Universitas Hang Tuah Surabaya";
+	const nama_jurnal = "Ajudikasi, Jurnal Ilmu Hukum "//await page.$eval(".data strong", text => text.innerText)
+
+	const universitas = "Universitas Serang Raya";
 	
 	for(let i = 0; i < linkIssue.length; i++){
 		await page.goto(linkIssue[i], {timeout: 0})
 
-		const linkData = await page.$$eval(".title a", (link) => {
+		const linkData = await page.$$eval(".subtitle a", (link) => {
 			return link.map( x => x.href);
 		})
 
@@ -48,12 +50,14 @@ async function getDataJurnal(){
 
 			const linkPDF = await page.$eval(".obj_galley_link", href => href.href)
 
+			linkToDownload.push(linkPDF);
+
 
 			// Buat try catch buat nampung jika data tidak ada, maka akan diisi "-"
 			let abstrak;
 			try {
 				abstrak = await page.$$eval(".abstract p", (abstrak) => {
-					return abstrak.map(text => text.innerText). join("\n")
+					return abstrak.map(text => text.innerText).join("\n")
 				})
 			} catch {
 				abstrak = "-"
@@ -117,25 +121,22 @@ async function getDataJurnal(){
 
 			});
 
-			await page._client.send('Page.setDownloadBehavior', {
+			console.log(linkToDownload)
+		}
+	}
+
+	for(let i = 0; i < linkToDownload.length; i++){
+
+		await page._client.send('Page.setDownloadBehavior', {
 	            behavior: 'allow',
 	            downloadPath: downloadPath,
 
 	        });
 
-			try{
-				await page.goto(linkPDF, {timeout: 0})
+				await page.goto(linkToDownload[i], {timeout: 0})
 				await page.click(".download")
-				console.log(`Berhasil mendownload ${j+1} file`)
-			}catch{
-				await page.goto(linkData[j+1])	
-				console.log("Gagal mendownload PDF")
-			}
-
-		}
-
-
-		}
+				console.log(`Berhasil mendownload ${i+1} file`)
+	}
 	
 	await page.waitForTimeout(30000);
 

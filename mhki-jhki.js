@@ -35,6 +35,7 @@ async function getDataJurnal(){
 
 	const tahun = "2021" //await page.$eval(".current_issue_title", text => text.innerText.split(" ").pop())
 
+	const universitas =  "Masyarakat Hukum Kesehatan Indonesia";
 	let arr_nama_file = []
 
 	for(let i = 0; i < linkData.length; i++){
@@ -46,13 +47,6 @@ async function getDataJurnal(){
 
 
 		// Buat try catch buat nampung jika data tidak ada, maka akan diisi "-"
-		let universitas;
-		try {
-			universitas = await page.$eval(".affiliation", text => text.innerText)
-		} catch {
-			universitas = "-"
-		}
-
 		let abstrak;
 		try {
 			abstrak = await page.$eval(".abstract p", text => text.innerText)
