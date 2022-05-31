@@ -18,40 +18,65 @@ const s3 = new AWS.S3({endpoint: spacesEndpoint, accessKeyId: process.env.DO_SPA
 // buat fungsi asynchronous untuk puppeteer
 async function getDataJurnal(){
 	// Jalankan puppeteer pake .launch()
-	const browser = await puppeteer.launch({headless: false});
+	const browser = await puppeteer.launch({headless: true});
 
 	// Buat halaman baru pake .newpage()
 	const page = await browser.newPage();
 
 	// Arahkan halaman ke url yang diinginkan
-	await page.goto("https://perspektif-hukum.hangtuah.ac.id/index.php/jurnal", {timeout: 0});
+	await page.goto("https://ojs.uid.ac.id/index.php/jrh", {timeout: 0});
 
 	// ambil semua link yang perlu kita ambil datanya pake .$$eval
 	const linkData = await page.$$eval(".title a", (link) => {
 		return link.map( x => x.href);
 	})
 
-	const nama_jurnal = await page.$eval(".data strong", text => text.innerText)
+	const nama_jurnal = "Reformasi Hukum"//await page.$eval(".data strong", text => text.innerText)
 
-	const tahun = await page.$eval(".current_issue_title", text => text.innerText.split(" ").pop())
+	const tahun = "2021" //await page.$eval(".current_issue_title", text => text.innerText.split(" ").pop())
 
 	let arr_nama_file = []
 
 	for(let i = 0; i < linkData.length; i++){
 		await page.goto(linkData[i], {timeout: 0});
 
-	const title = await page.$eval(".page_title", title => title.innerText);
-		const author = await page.$$eval(".name", (name) =>{
-			return name.map(text => text.innerText).join(", ") 
-		});
-
-		const universitas = await page.$eval(".affiliation", text => text.innerText);
-		const abstrak = await page.$eval(".abstract p", text => text.innerText);
+		const title = await page.$eval(".page_title", title => title.innerText);
 
 		const linkPDF = await page.$eval(".pdf", href => href.href)
 
-		const doi = await page.$eval(".doi .value", text => text.innerText)
 
+		// Buat try catch buat nampung jika data tidak ada, maka akan diisi "-"
+		let universitas;
+		try {
+			universitas = await page.$eval(".affiliation", text => text.innerText)
+		} catch {
+			universitas = "-"
+		}
+
+		let abstrak;
+		try {
+			abstrak = await page.$eval(".abstract p", text => text.innerText)
+		} catch {
+			abstrak = "-"
+		}
+
+		let author;
+		try {
+			author = await page.$$eval(".name", (name) =>{
+				return name.map(text => text.innerText).join(", ") 
+			});
+		} catch {
+			author = "-"
+		}
+
+		let doi;
+		try {
+			doi = await page.$eval(".doi .value", text => text.innerText)
+		} catch {
+			doi = "-"
+		}
+
+		
 		// Karena nama file gak bisa banyak-banyak characternya maka kita rapihkan di sini.
 
 		// untuk title di nama file nya kita buat agar tidak lebih dari 10 kata
@@ -71,6 +96,7 @@ async function getDataJurnal(){
 
 		const data = {title, author, nama_jurnal, universitas, doi, abstrak, nama_file, tahun};
 
+		console.log(data)
 		// Masukkan data ke database
 		let con = mysql.createConnection({
 		  host: "localhost",
@@ -90,7 +116,8 @@ async function getDataJurnal(){
 		    console.log(`berhasil menambahkan ${i+1} row`)
 		  })
 
-		  con.end()
+  		con.end()
+
 		});
 
 		await page._client.send('Page.setDownloadBehavior', {
@@ -103,45 +130,13 @@ async function getDataJurnal(){
 
 		await page.click(".download")
 
-		// // Setelah klik tombol download... kita buat halaman baru ke chrome://downloads
-		// dmPage = await browser.newPage()
-		// await dmPage.goto('chrome://downloads')
-
-		// // buat halaman download nya biar di depan
-		// await dmPage.bringToFront();
-		// const checkdownloading = await dmPage.waitForFunction(
-		//     () => {
-		//     	// Singkatnya kita ambil tombol "Show in folder" jika tulisannya sudah berubah jadi "Show in folder" yang berarti proses download kita sudah selesai, lalu baru kita lanjutkan ke proses selanjutnya, dan tidak melangkahi proses yang lain
-		//         const dm = document.querySelector('downloads-manager').shadowRoot
-		//         const firstItem = dm.querySelector('#frb0')
-		//         if (firstItem) {
-		//             const thatArea = firstItem.shadowRoot.querySelector('.controls')
-		//             const atag = thatArea.querySelector('a')
-		//             const donePath = document.querySelector("downloads-manager").shadowRoot.querySelector("#frb0",).shadowRoot.querySelector("#pauseOrResume");
-		//             if (atag && atag.textContent === 'Show in folder' ) { 
-		//                 return true
-		//             }else{
-		//             	console.log("asede")
-		//             }
-		//             const btn = thatArea.querySelector('cr-button')
-		//             if (btn && btn.textContent === 'Retry') {
-		//                 btn.click()
-		//             }
-		//         }
-		//     },
-		//     { polling: 'raf', timeout: 0 }
-		// )
-
-
-
-		// Kita tutup halaman downloadnya agar kembali lagi ke halaman jurnalnya
-		// await dmPage.close();
-
 		console.log(`Berhasil mendownload ${i+1} file`)
+
 
 	}
 
 	await page.waitForTimeout(30000);
+
 
 
 	let dir = 'data/';
@@ -167,7 +162,6 @@ async function getDataJurnal(){
 		let pathLama = `data/${files[i]}`;
 		let pathBaru = `data/${arr_nama_file[i]}`;
 		fs.rename(pathLama, pathBaru, (err) => {
-			// Kalo misal saat proses rename ada error, hapus semua file yang sudah didownload di folder data
 			if (err){
 				fse.emptyDirSync('data')
 			}

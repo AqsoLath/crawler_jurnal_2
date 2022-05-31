@@ -138,6 +138,7 @@ async function getDataJurnal(){
 	await page.waitForTimeout(30000);
 
 
+
 	let dir = 'data/';
 
 	// Kita ambil semua nama file yang ada di folder data lalu kita urutkan berdasarkan waktu downloadnya agar bisa menyesuaikan dengan nama_file yang ada di arr_nama_file
@@ -161,7 +162,9 @@ async function getDataJurnal(){
 		let pathLama = `data/${files[i]}`;
 		let pathBaru = `data/${arr_nama_file[i]}`;
 		fs.rename(pathLama, pathBaru, (err) => {
-			if (err) throw err
+			if (err){
+				fse.emptyDirSync('data')
+			}
 
 			console.log(`Berhasil mengganti nama ${pathLama} menjadi ${pathBaru}`)
 
