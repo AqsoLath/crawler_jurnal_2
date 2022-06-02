@@ -33,6 +33,8 @@ async function getDataJurnal(){
 
 	const universitas = "Universitas Airlangga";
 	
+	let jumlahMasukDB = 0;
+
 	for(let i = 0; i < linkIssue.length; i++){
 		await page.goto(linkIssue[i], {timeout: 0})
 
@@ -42,7 +44,6 @@ async function getDataJurnal(){
 
 		const tahun = await page.$eval(".published .value", text => text.innerText.split("-").shift())
 
-		let jumlahMasukDB = 0;
 
 		for(let j = 0; j < linkData.length; j++){
 			await page.goto(linkData[j], {timeout: 0});
@@ -100,10 +101,6 @@ async function getDataJurnal(){
 				arr_nama_file.push(nama_file);
 			}
 
-
-
-			
-
 			const dirtyData = {title, author, nama_jurnal, universitas, doi, abstrak, nama_file, tahun};
 
 			const data = {}
@@ -111,7 +108,7 @@ async function getDataJurnal(){
 			for (var x in dirtyData) {
 			  data[x] = dirtyData[x].replace(/["]/g,'');
 			}
-			console.log(data)
+			// console.log(data)
 			// Masukkan data ke database
 			let con = mysql.createConnection({
 			  host: "localhost",
@@ -135,8 +132,6 @@ async function getDataJurnal(){
 	  		con.end()
 
 			});
-
-			console.log(linkToDownload)
 		}
 	}
 
